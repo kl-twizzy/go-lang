@@ -126,7 +126,6 @@ func (w Whale) Dive() string {
 	return "Ныряет глубоко"
 }
 
-// UnknownAnimal структура, которая реализует интерфейс Animal, но генерирует ошибку при вызове метода Speak
 type UnknownAnimal struct{}
 
 func (t UnknownAnimal) Speak() string {
@@ -142,7 +141,6 @@ func (t UnknownAnimal) Sleep() string {
 	return "Неизвестно"
 }
 
-// Функция для получения животного по его типу
 func getAnimal(animalType string) (Animal, error) {
 	switch strings.ToLower(animalType) {
 	case "monkey":
@@ -160,7 +158,6 @@ func getAnimal(animalType string) (Animal, error) {
 	}
 }
 
-// Функция для логирования ошибок
 func logError(err error) {
 	logFile, _ := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer logFile.Close()
@@ -170,17 +167,15 @@ func logError(err error) {
 }
 
 func main() {
-	// Создаем лог-файл для ошибок
 	logFile, err := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Не удалось создать файл лога: %v", err)
 	}
 	defer logFile.Close()
 
-	// Устанавливаем логгер для стандартного вывода ошибок
 	log.SetOutput(logFile)
 
-	// Запрашиваем у пользователя тип животного
+	// Запрашиваем тип животного
 	fmt.Print("Введите тип животного (monkey, shark, eagle, bear, whale): ")
 	var animalType string
 	fmt.Scanln(&animalType)
@@ -200,12 +195,10 @@ func main() {
 	fmt.Printf("Еда: %v\n", animal.Eat())
 	fmt.Printf("Сон: %v\n", animal.Sleep())
 
-	// Проверка на умение плавать
 	if swimmer, ok := animal.(Swimmer); ok {
 		fmt.Printf("Умеет плавать: %v\n", swimmer.CanSwim())
 	}
 
-	// Выводим дополнительную информацию в зависимости от типа животного
 	switch a := animal.(type) {
 	case Monkey:
 		fmt.Printf("Лазание: %v\n", a.Climb())
