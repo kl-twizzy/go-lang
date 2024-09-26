@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+)
 
 // Интерфейс для всех животных
 type Animal interface {
@@ -120,39 +126,100 @@ func (w Whale) Dive() string {
 	return "Ныряет глубоко"
 }
 
+// UnknownAnimal структура, которая реализует интерфейс Animal, но генерирует ошибку при вызове метода Speak
+type UnknownAnimal struct{}
+
+func (t UnknownAnimal) Speak() string {
+	panic("UnknownAnimal cannot speak")
+}
+func (t UnknownAnimal) Move() string {
+	return "Неизвестно"
+}
+func (t UnknownAnimal) Eat() string {
+	return "Неизвестно"
+}
+func (t UnknownAnimal) Sleep() string {
+	return "Неизвестно"
+}
+
+// Функция для получения животного по его типу
+func getAnimal(animalType string) (Animal, error) {
+	switch strings.ToLower(animalType) {
+	case "monkey":
+		return Monkey{}, nil
+	case "shark":
+		return Shark{}, nil
+	case "eagle":
+		return Eagle{}, nil
+	case "bear":
+		return Bear{}, nil
+	case "whale":
+		return Whale{}, nil
+	default:
+		return UnknownAnimal{}, errors.New("unknown animal type")
+	}
+}
+
+// Функция для логирования ошибок
+func logError(err error) {
+	logFile, _ := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	defer logFile.Close()
+
+	logger := log.New(logFile, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	logger.Println(err)
+}
+
 func main() {
-	animals := []Animal{
-		Monkey{},
-		Shark{},
-		Eagle{},
-		Bear{},
-		Whale{},
+	// Создаем лог-файл для ошибок
+	logFile, err := os.OpenFile("errors.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Не удалось создать файл лога: %v", err)
+	}
+	defer logFile.Close()
+
+	// Устанавливаем логгер для стандартного вывода ошибок
+	log.SetOutput(logFile)
+
+	// Запрашиваем у пользователя тип животного
+	fmt.Print("Введите тип животного (monkey, shark, eagle, bear, whale): ")
+	var animalType string
+	fmt.Scanln(&animalType)
+
+	// Получаем животное по его типу
+	animal, err := getAnimal(animalType)
+	if err != nil {
+		logError(err)
+		fmt.Println("Неизвестный тип животного. Попробуйте снова.")
+		return
 	}
 
-	for _, animal := range animals {
-		fmt.Printf("Животное: %T\n", animal)
-		fmt.Printf("Звук: %v\n", animal.Speak())
-		fmt.Printf("Движение: %v\n", animal.Move())
-		fmt.Printf("Еда: %v\n", animal.Eat())
-		fmt.Printf("Сон: %v\n", animal.Sleep())
+	// Выводим информацию о животном
+	fmt.Printf("Животное: %T\n", animal)
+	fmt.Printf("Звук: %v\n", animal.Speak())
+	fmt.Printf("Движение: %v\n", animal.Move())
+	fmt.Printf("Еда: %v\n", animal.Eat())
+	fmt.Printf("Сон: %v\n", animal.Sleep())
 
-		if swimmer, ok := animal.(Swimmer); ok {
-			fmt.Printf("Умеет плавать: %v\n", swimmer.CanSwim())
-		}
-
-		switch a := animal.(type) {
-		case Monkey:
-			fmt.Printf("Лазание: %v\n", a.Climb())
-		case Shark:
-			fmt.Printf("Охота: %v\n", a.Hunt())
-		case Eagle:
-			fmt.Printf("Полет: %v\n", a.Fly())
-		case Bear:
-			fmt.Printf("Зимовка: %v\n", a.Hibernate())
-		case Whale:
-			fmt.Printf("Ныряние: %v\n", a.Dive())
-		}
-
-		fmt.Println("-----------------------------")
+	// Проверка на умение плавать
+	if swimmer, ok := animal.(Swimmer); ok {
+		fmt.Printf("Умеет плавать: %v\n", swimmer.CanSwim())
 	}
+
+	// Выводим дополнительную информацию в зависимости от типа животного
+	switch a := animal.(type) {
+	case Monkey:
+		fmt.Printf("Лазание: %v\n", a.Climb())
+	case Shark:
+		fmt.Printf("Охота: %v\n", a.Hunt())
+	case Eagle:
+		fmt.Printf("Полет: %v\n", a.Fly())
+	case Bear:
+		fmt.Printf("Зимовка: %v\n", a.Hibernate())
+	case Whale:
+		fmt.Printf("Ныряние: %v\n", a.Dive())
+	case UnknownAnimal:
+		fmt.Println("Неизвестное животное")
+	}
+
+	fmt.Println("-----------------------------")
 }
