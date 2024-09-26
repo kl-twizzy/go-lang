@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Интерфейс для всех животных
+// Интерфейс для всех
 type Animal interface {
 	Speak() string
 	Move() string
